@@ -50,7 +50,7 @@ var properties = [
 
 var isFirefox = window.mozInnerScreenX != null;
 
-function getCaretCoordinates(element, position) {
+function getCaretCoordinates(element) {
   // mirrored div
   var div = document.createElement('div');
   div.id = 'input-textarea-caret-position-mirror-div';
@@ -81,7 +81,7 @@ function getCaretCoordinates(element, position) {
     style.overflow = 'hidden';  // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
   }
 
-  div.textContent = element.value.substring(0, position);
+  div.textContent = element.value;
   // the second special handling for input type="text" vs textarea: spaces need to be replaced with non-breaking spaces - http://stackoverflow.com/a/13402035/1269037
   if (element.nodeName === 'INPUT')
     div.textContent = div.textContent.replace(/\s/g, "\u00a0");
@@ -92,12 +92,40 @@ function getCaretCoordinates(element, position) {
   // The  *only* reliable way to do that is to copy the *entire* rest of the
   // textarea's content into the <span> created at the caret position.
   // for inputs, just '.' would be enough, but why bother?
-  span.textContent = element.value.substring(position) || '.';  // || because a completely empty faux span doesn't render at all
+  span.textContent = ' ';  // because a completely empty faux span doesn't render at all
   div.appendChild(span);
 
+  var maxTop = element.scrollHeight
+               - parseInt(computed['borderBottomWidth'])
+               - parseInt(computed['lineHeight'])
+               + parseInt(computed['paddingTop']);
+
+  if( element.scrollTop > 0 ) {
+    maxTop = maxTop
+             - element.scrollTop
+             - parseInt(computed['lineHeight'])
+             + parseInt(computed['paddingTop']);
+
+    if( isFirefox )
+      maxTop += 4; //Firefox has an odd caclulation of scroll top that is off by ~4px;
+  }
+
+
+  var actualTop = span.offsetTop + parseInt(computed['borderTopWidth']);
+
+  var top = actualTop > maxTop ? maxTop : actualTop;
+
+  var left = span.offsetLeft + parseInt(computed['borderLeftWidth']);
+
+  // If the left position was too far to the right ( the max right - 20 ), then we will return it
+  // off to the left by 30px so that the word count div do not get cut to the right of the screen
+  // check it on /compose.
+  if( left > element.clientWidth - parseInt(computed['paddingLeft']) - parseInt(computed['paddingRight']) - 20 )
+    left -= 30;
+
   var coordinates = {
-    top: span.offsetTop + parseInt(computed['borderTopWidth']),
-    left: span.offsetLeft + parseInt(computed['borderLeftWidth'])
+    top: top,
+    left: left
   };
 
   document.body.removeChild(div);

@@ -1,3 +1,18 @@
+# Parlio Customization
+
+The original library was from [https://github.com/component/textarea-caret-position](https://github.com/component/textarea-caret-position)
+
+The library is extremely customized to fullfil our needs, and to fix some bugs
+
+* The library currently get the coordinates right after the last word in the input
+* The trailing character in the span inserted in the mirror div is changed from `'.'` to `' '` (space) to avoid jumping to a new line if the original text consumed the whole line.
+* It is now handling if there is a scroll for a text area.
+* It return the coordinates shifted a bit to the left if it hits the end of line to avoid rendering elements outside of the viewport.
+
+The below documentation is unchanged, it is the original one of the library before changing it.
+
+Also note that the test suite is currently failing, as it is also unchanged from the original source.
+
 # Textarea Caret Position
 
 Get the `top` and `left` coordinates of the caret in a `<textarea>` or

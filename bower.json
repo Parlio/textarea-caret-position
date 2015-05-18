@@ -1,0 +1,15 @@
+{
+    "name": "TextAreaCaretPosition",
+    "version": "4.0.0",
+    "main": "index.js",
+    "ignore": [
+        "test",
+        ".gitignore",
+        "bower.json",
+        "component.json",
+        "HISTORY.md",
+        "LICENSE",
+        "package.json",
+        "README.md"
+    ]
+}
