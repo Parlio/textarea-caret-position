@@ -50,14 +50,25 @@ var properties = [
 
 var isFirefox = window.mozInnerScreenX != null;
 
-function getCaretCoordinates(element) {
+/*
+ * We changed this function a little:
+ * Case 1: Not sending position
+ *     In case we are not sending the caret position in the text area, then we will return the
+       coordinates as if the caret is at the last character in the textarea
+
+ * Case 2: Sending a position ( either the position of the caret or anywhere we choose )
+ *     We will return the exact coordinates as if the caret is at the position sent
+ */
+function getCaretCoordinates(element, position) {
   // mirrored div
   var div = document.createElement('div');
   div.id = 'input-textarea-caret-position-mirror-div';
   document.body.appendChild(div);
 
   var style = div.style;
-  var computed = window.getComputedStyle? getComputedStyle(element) : element.currentStyle;  // currentStyle for IE < 9
+  // currentStyle for IE < 9
+  var computed = window.getComputedStyle? getComputedStyle(element) : element.currentStyle;
+
 
   // default textarea styles
   style.whiteSpace = 'pre-wrap';
@@ -81,19 +92,32 @@ function getCaretCoordinates(element) {
     style.overflow = 'hidden';  // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
   }
 
-  div.textContent = element.value;
-  // the second special handling for input type="text" vs textarea: spaces need to be replaced with non-breaking spaces - http://stackoverflow.com/a/13402035/1269037
+  var span = document.createElement('span');
+
+  if( position != null ) {
+    div.textContent = element.value.substring(0, position);
+    span.textContent = element.value.substring(position) || ' ';
+    // ' ' because a completely empty faux span doesn't render at all
+  } else {
+    div.textContent = element.value;
+    span.textContent = ' ';
+  }
+
+  // the second special handling for input type="text" vs textarea: 
+  // spaces need to be replaced with non-breaking spaces - http://stackoverflow.com/a/13402035/1269037
   if (element.nodeName === 'INPUT')
     div.textContent = div.textContent.replace(/\s/g, "\u00a0");
 
-  var span = document.createElement('span');
-  // Wrapping must be replicated *exactly*, including when a long word gets
-  // onto the next line, with whitespace at the end of the line before (#7).
-  // The  *only* reliable way to do that is to copy the *entire* rest of the
-  // textarea's content into the <span> created at the caret position.
-  // for inputs, just '.' would be enough, but why bother?
-  span.textContent = ' ';  // because a completely empty faux span doesn't render at all
   div.appendChild(span);
+
+  if( position != null ) {
+    var coordinates = {
+      top: span.offsetTop + parseInt(computed['borderTopWidth']),
+      left: span.offsetLeft + parseInt(computed['borderLeftWidth'])
+    }
+    document.body.removeChild(div);
+    return coordinates;
+  }
 
   var maxTop = element.scrollHeight
                - parseInt(computed['borderBottomWidth'])
